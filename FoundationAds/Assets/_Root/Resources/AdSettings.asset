@@ -16,14 +16,32 @@ MonoBehaviour:
   adLoadingInterval: 15
   currentNetwork: 1
   gdpr: 1
-  gdprTestMode: 0
+  gdprTestMode: 1
   admobEnableTestMode: 1
   admobDevicesTest: []
   admobBanner:
+    androidId: ca-app-pub-3940256099942544/6300978111
     size: 5
     position: 0
     collapsiblePosition: 0
+  admobInter:
+    androidId: ca-app-pub-3940256099942544/1033173712
+  admobReward:
+    androidId: ca-app-pub-3940256099942544/5224354917
+  admobRewardInter:
+    androidId: 
+  admobAppOpen:
+    androidId: 
   applovinBanner:
+    androidId: 
     size: 0
     position: 0
+  applovinInter:
+    androidId: 
+  applovinReward:
+    androidId: 
+  applovinRewardInter:
+    androidId: 
+  applovinAppOpen:
+    androidId: 
   applovinEnableAgeRestrictedUser: 0
