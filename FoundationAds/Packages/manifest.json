@@ -8,7 +8,6 @@
     "com.coffee.ui-effect": "https://github.com/mob-sakai/UIEffect.git#4.0.0-preview.10",
     "com.coffee.ui-particle": "https://github.com/mob-sakai/ParticleEffectForUGUI.git#4.8.1",
     "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask#2.5.5",
-    "com.deltation.toon-rp": "https://github.com/Delt06/toon-rp.git?path=Packages/com.deltation.toon-rp",
     "com.gemserk.selectionhistory": "https://github.com/acoppes/unity-history-window.git#1.5.5",
     "com.google.external-dependency-manager": "https://github.com/google-unity/external-dependency-manager.git#1.2.177",
     "com.harumaro.ugizmo": "https://github.com/harumas/UGizmo.git?path=src/UGizmo/Assets/UGizmo",
