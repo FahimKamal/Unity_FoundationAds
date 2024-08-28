@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0307edf6ddd52a4b958a6f8cadd8038, type: 3}
+  m_Name: IAPSettings
+  m_EditorClassIdentifier: 
+  skusData:
+  - id: com.FoundationAds.testItem
+    productType: 0
+  products:
+  - {fileID: 11400000, guid: 195486a1fff066347b5135d156333d50, type: 2}
+  googlePlayStoreKey: 

@@ -12,7 +12,7 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: DefaultCompany
+  companyName: NovaLabs
   productName: FoundationAds
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
@@ -161,7 +161,7 @@ PlayerSettings:
   androidSupportedAspectRatio: 1
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
-    Android: com.UnityTechnologies.com.unity.template.urpblank
+    Android: com.NovaLabs.FoundationAds
     Standalone: com.Unity-Technologies.com.unity.template.urp-blank
     iPhone: com.Unity-Technologies.com.unity.template.urp-blank
   buildNumber:
@@ -171,7 +171,7 @@ PlayerSettings:
     tvOS: 0
   overrideDefaultApplicationIdentifier: 1
   AndroidBundleVersionCode: 1
-  AndroidMinSdkVersion: 22
+  AndroidMinSdkVersion: 34
   AndroidTargetSdkVersion: 0
   AndroidPreferredInstallLocation: 1
   aotOptions: 
@@ -260,7 +260,7 @@ PlayerSettings:
   useCustomGradlePropertiesTemplate: 1
   useCustomGradleSettingsTemplate: 0
   useCustomProguardFile: 0
-  AndroidTargetArchitectures: 1
+  AndroidTargetArchitectures: 3
   AndroidTargetDevices: 0
   AndroidSplashScreenScale: 0
   androidSplashScreen: {fileID: 0}
@@ -806,26 +806,27 @@ PlayerSettings:
   webGLMemoryGeometricGrowthCap: 96
   webGLPowerPreference: 2
   scriptingDefineSymbols:
-    Android: PANCAKE_ADVERTISING;PANCAKE_ADMOB;PANCAKE_APPLOVIN
-    EmbeddedLinux: PANCAKE_ADVERTISING;PANCAKE_ADMOB;PANCAKE_APPLOVIN
-    GameCoreScarlett: PANCAKE_ADVERTISING;PANCAKE_ADMOB;PANCAKE_APPLOVIN
-    GameCoreXboxOne: PANCAKE_ADVERTISING;PANCAKE_ADMOB;PANCAKE_APPLOVIN
-    LinuxHeadlessSimulation: PANCAKE_ADVERTISING;PANCAKE_ADMOB;PANCAKE_APPLOVIN
-    Nintendo Switch: PANCAKE_ADVERTISING;PANCAKE_ADMOB;PANCAKE_APPLOVIN
-    PS4: PANCAKE_ADVERTISING;PANCAKE_ADMOB;PANCAKE_APPLOVIN
-    PS5: PANCAKE_ADVERTISING;PANCAKE_ADMOB;PANCAKE_APPLOVIN
-    QNX: PANCAKE_ADVERTISING;PANCAKE_ADMOB;PANCAKE_APPLOVIN
-    Stadia: PANCAKE_ADVERTISING;PANCAKE_ADMOB;PANCAKE_APPLOVIN
-    Standalone: PANCAKE_ADVERTISING;PANCAKE_ADMOB;PANCAKE_APPLOVIN
-    VisionOS: PANCAKE_ADVERTISING;PANCAKE_ADMOB;PANCAKE_APPLOVIN
-    WebGL: PANCAKE_ADVERTISING;PANCAKE_ADMOB;PANCAKE_APPLOVIN
-    Windows Store Apps: PANCAKE_ADVERTISING;PANCAKE_ADMOB;PANCAKE_APPLOVIN
-    XboxOne: PANCAKE_ADVERTISING;PANCAKE_ADMOB;PANCAKE_APPLOVIN
-    iPhone: PANCAKE_ADVERTISING;PANCAKE_ADMOB;PANCAKE_APPLOVIN
-    tvOS: PANCAKE_ADVERTISING;PANCAKE_ADMOB;PANCAKE_APPLOVIN
+    Android: PANCAKE_ADVERTISING;PANCAKE_ADMOB
+    EmbeddedLinux: PANCAKE_ADVERTISING;PANCAKE_ADMOB
+    GameCoreScarlett: PANCAKE_ADVERTISING;PANCAKE_ADMOB
+    GameCoreXboxOne: PANCAKE_ADVERTISING;PANCAKE_ADMOB
+    LinuxHeadlessSimulation: PANCAKE_ADVERTISING;PANCAKE_ADMOB
+    Nintendo Switch: PANCAKE_ADVERTISING;PANCAKE_ADMOB
+    PS4: PANCAKE_ADVERTISING;PANCAKE_ADMOB
+    PS5: PANCAKE_ADVERTISING;PANCAKE_ADMOB
+    QNX: PANCAKE_ADVERTISING;PANCAKE_ADMOB
+    Stadia: PANCAKE_ADVERTISING;PANCAKE_ADMOB
+    Standalone: PANCAKE_ADVERTISING;PANCAKE_ADMOB
+    VisionOS: PANCAKE_ADVERTISING;PANCAKE_ADMOB
+    WebGL: PANCAKE_ADVERTISING;PANCAKE_ADMOB
+    Windows Store Apps: PANCAKE_ADVERTISING;PANCAKE_ADMOB
+    XboxOne: PANCAKE_ADVERTISING;PANCAKE_ADMOB
+    iPhone: PANCAKE_ADVERTISING;PANCAKE_ADMOB
+    tvOS: PANCAKE_ADVERTISING;PANCAKE_ADMOB
   additionalCompilerArguments: {}
   platformArchitecture: {}
-  scriptingBackend: {}
+  scriptingBackend:
+    Android: 1
   il2cppCompilerConfiguration: {}
   il2cppCodeGeneration: {}
   managedStrippingLevel:
