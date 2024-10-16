@@ -4,7 +4,9 @@
     "references": [
         "InitArgs",
         "InitArgs.Services",
-        "Pancake.Localization"
+        "Pancake.Localization",
+        "Pancake.Common.Editor",
+        "Unity.InternalAPIEditorBridgeDev.004"
     ],
     "includePlatforms": [
         "Editor"

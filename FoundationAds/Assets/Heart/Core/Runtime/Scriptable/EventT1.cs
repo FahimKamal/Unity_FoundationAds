@@ -18,7 +18,7 @@ namespace Pancake
     /// </typeparam>
     public abstract class Event<TArgument> : ScriptableObject, IEvent<TArgument>, IEventTrigger<TArgument>
     {
-        protected const string CREATE_ASSET_MENU = "Pancake/Scriptable/Events";
+        protected const string CREATE_ASSET_MENU = "Pancake/Scriptable/Events/";
 
         private event UnityAction<TArgument> Listeners;
 

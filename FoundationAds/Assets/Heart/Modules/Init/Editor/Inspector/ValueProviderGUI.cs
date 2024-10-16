@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Sisus.Init.Internal;
+using Sisus.Shared.EditorOnly;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -10,25 +11,25 @@ using Object = UnityEngine.Object;
 
 namespace Sisus.Init.EditorOnly.Internal
 {
-	public sealed class ValueProviderGUI : IDisposable
+	internal sealed class ValueProviderGUI : IDisposable
 	{
 		private Editor editor;
-		private readonly GUIContent prefixLabel = new("");
-		private readonly GUIContent valueProviderLabel = new("");
+		private readonly GUIContent prefixLabel;
+		private readonly GUIContent valueProviderLabel;
 		private readonly SerializedProperty anyProperty;
 		private readonly SerializedProperty referenceProperty;
 		private readonly Type valueType;
 		private readonly bool isControlless;
 		private readonly Action onDiscardButtonPressed;
-		private static readonly GUILayoutOption[] discardButtonLayoutOptions = new[] { GUILayout.Height(10f), GUILayout.Width(10f) };
+		private static readonly GUILayoutOption[] discardButtonLayoutOptions = { GUILayout.Height(10f), GUILayout.Width(10f) };
+		private readonly MethodInfo evaluateNullGuard;
+		private readonly object[] evaluateNullGuardArgs;
 
-		private static Color ObjectFieldBackgroundColor => LayoutUtility.NowDrawing is InitializableEditor or InitializerEditor
-														// EditorStyles.HelpBox background color
-														? (EditorGUIUtility.isProSkin ? new Color32(64, 64, 64, 255) : new Color32(208, 208, 208, 255))
-														// Inspector background color
-														:(EditorGUIUtility.isProSkin ? new Color32(56, 56, 56, 255) : new Color32(200, 200, 200, 255));
+		private static Color ObjectFieldBackgroundColor => InitializerGUI.NowDrawing is not null ? HelpBoxBackgroundColor : InspectorBackgroundColor;
+		private static Color HelpBoxBackgroundColor => EditorGUIUtility.isProSkin ? new Color32(64, 64, 64, 255) : new Color32(208, 208, 208, 255);
+		private static Color InspectorBackgroundColor => EditorGUIUtility.isProSkin ? new Color32(56, 56, 56, 255) : new Color32(200, 200, 200, 255);
 
-		public ValueProviderGUI(Editor editor, GUIContent prefixLabel, SerializedProperty anyProperty, SerializedProperty referenceProperty, Type valueType, Action onDiscardButtonPressed)
+		public ValueProviderGUI(Editor editor, GUIContent prefixLabel, SerializedProperty anyProperty, SerializedProperty referenceProperty, Type anyType, Type valueType, Action onDiscardButtonPressed)
 		{
 			this.editor = editor;
 			this.prefixLabel = prefixLabel;
@@ -36,6 +37,9 @@ namespace Sisus.Init.EditorOnly.Internal
 			this.referenceProperty = referenceProperty;
 			this.valueType = valueType;
 			this.onDiscardButtonPressed = onDiscardButtonPressed;
+
+			evaluateNullGuard = anyType.GetMethod(nameof(Any<object>.EvaluateNullGuard), BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+			evaluateNullGuardArgs = new object[] { anyProperty.serializedObject.targetObject as Component, Context.MainThread };
 
 			var valueProvider = editor.target;
 			if(valueProvider?.GetType() is Type valueProviderType)
@@ -79,7 +83,7 @@ namespace Sisus.Init.EditorOnly.Internal
 				valueProviderLabel = GUIContent.none;
 			}
 
-			if(editor is ValueProviderDrawer || !CustomEditorUtility.IsGenericInspectorType(editor.GetType()))
+			if(editor is ValueProviderDrawer || !CustomEditorUtility.IsDefaultOrOdinEditor(editor.GetType()))
 			{
 				isControlless = false;
 			}
@@ -270,11 +274,7 @@ namespace Sisus.Init.EditorOnly.Internal
 				}
 			}
 
-			var nullGuardResult = referenceProperty.objectReferenceValue is INullGuard nullGuard ? nullGuard.EvaluateNullGuard(referenceProperty.serializedObject.targetObject as Component)
-								: referenceProperty.objectReferenceValue is INullGuardByType ? (NullGuardResult)typeof(INullGuardByType).GetMethod(nameof(INullGuardByType.EvaluateNullGuard))
-																							   .MakeGenericMethod(valueType)
-																							   .Invoke(referenceProperty.objectReferenceValue, new object[] { referenceProperty.serializedObject.targetObject as Component })
-								: NullGuardResult.Passed;
+			var nullGuardResult = (NullGuardResult)evaluateNullGuard.Invoke(anyProperty.GetValue(), evaluateNullGuardArgs);
 
 			// Tint label green if value exists at this moment
 			var backgroundColorWas = GUI.backgroundColor;
@@ -313,7 +313,7 @@ namespace Sisus.Init.EditorOnly.Internal
 
 		public void Dispose()
 		{
-			if(editor != null)
+			if(editor)
 			{
 				Object.DestroyImmediate(editor);
 				editor = null;

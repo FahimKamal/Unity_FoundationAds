@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using Alchemy.Inspector;
+using Sirenix.OdinInspector;
 using Pancake.Common;
 using UnityEngine;
 
 namespace Pancake.Sound
 {
+    [Searchable]
     [EditorIcon("so_blue_audioclip")]
     [CreateAssetMenu(fileName = "Audio", menuName = "Pancake/Audio Data")]
     public class AudioData : ScriptableObject, ISerializationCallbackReceiver

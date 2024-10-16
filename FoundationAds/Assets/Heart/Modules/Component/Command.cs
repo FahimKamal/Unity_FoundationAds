@@ -1,4 +1,6 @@
-﻿using Pancake.Localization;
+﻿#if PANCAKE_ROUTER
+using Pancake.Localization;
+using UnityEngine;
 using VitalRouter;
 
 namespace Pancake.Component
@@ -42,4 +44,19 @@ namespace Pancake.Component
 
         public UIShowAfterCommand(string group) { Group = group; }
     }
+
+    public readonly struct VfxMagnetCommand : ICommand
+    {
+        public string Type { get; }
+        public Vector3 Position { get; }
+        public int Value { get; }
+
+        public VfxMagnetCommand(string type, Vector3 position, int value)
+        {
+            Type = type;
+            Position = position;
+            Value = value;
+        }
+    }
 }
+#endif

@@ -2,31 +2,24 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Pancake.Sound;
-#if PANCAKE_ALCHEMY
-using Alchemy.Inspector;
-using Alchemy.Serialization;
-#endif
+using Sirenix.OdinInspector;
 using UnityEngine;
+#if PANCAKE_ROUTER
 using VitalRouter;
+#endif
 
 namespace Pancake.Component
 {
-    [AlchemySerialize]
     [EditorIcon("icon_default")]
-    public partial class VfxParticleCollision : GameComponent
+    public class VfxParticleCollision : GameComponent
     {
         public StringConstant type;
         [field: SerializeField] public ParticleSystem PS { get; private set; }
-#if PANCAKE_ALCHEMY
-        [AlchemySerializeField, NonSerialized]
-#endif
-        public Dictionary<int, int> numberParticleMap = new();
+        public Dictionary<int, int> numberParticleMap;
 
         [SerializeField] private bool enabledSound;
-#if PANCAKE_ALCHEMY
-        [ShowIf(nameof(enabledSound)), Indent]
-#endif
-        [SerializeField, AudioPickup]
+
+        [SerializeField, AudioPickup, ShowIf(nameof(enabledSound)), Indent]
         private AudioId audioCollision;
 
         private int _segmentValue;
@@ -58,7 +51,9 @@ namespace Pancake.Component
 
         private void OnParticleCollision(GameObject particle)
         {
+#if PANCAKE_ROUTER
             Router.Default.PublishAsync(new UpdateCurrencyWithValueCommand(type.Value, _segmentValue));
+#endif
             if (enabledSound) audioCollision.Play();
         }
 
@@ -74,7 +69,9 @@ namespace Pancake.Component
                 externalForcesModule.RemoveAllInfluences();
                 externalForcesModule.enabled = false;
                 _returnEvent.Invoke(gameObject);
+#if PANCAKE_ROUTER
                 if (_isFxInstanceEmpty.Invoke()) Router.Default.PublishAsync(new UpdateCurrencyCommand(type.Value));
+#endif
             }
         }
     }

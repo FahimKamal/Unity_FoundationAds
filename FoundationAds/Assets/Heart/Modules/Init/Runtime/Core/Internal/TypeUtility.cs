@@ -5,6 +5,8 @@ using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Text;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using Unity.Collections;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -218,6 +220,63 @@ namespace Sisus.Init.Internal
 		}
 
 		[return: NotNull]
+		internal static List<Type> GetOpenGenericTypeDerivedTypes([DisallowNull] Type openGenericType, bool publicOnly, bool concreteOnly, int estimatedResultCount)
+		{
+			if(openGenericType.IsSealed)
+			{
+				return new(0);
+			}
+
+			var results = new List<Type>(estimatedResultCount);
+
+			if(openGenericType.IsInterface)
+			{
+				foreach(var assembly in GetAllAssembliesThreadSafe(openGenericType.Assembly))
+				{
+					foreach(var type in assembly.GetLoadableTypes(publicOnly))
+					{
+						if(type.IsAbstract && concreteOnly)
+						{
+							continue;
+						}
+
+						var interfaces = type.GetInterfaces();
+						foreach(var interfaceType in interfaces)
+						{
+							if (interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == openGenericType)
+							{
+								results.Add(type);
+							}
+						}
+					}
+				}
+
+				return results;
+			}
+
+			foreach(var assembly in GetAllAssembliesThreadSafe(openGenericType.Assembly))
+			{
+				foreach(var type in assembly.GetLoadableTypes(publicOnly))
+				{
+					if(type.IsAbstract && concreteOnly)
+					{
+						continue;
+					}
+
+					for(var baseType = type.BaseType; baseType is not null; baseType = baseType.BaseType)
+					{
+						if (baseType.IsGenericType && baseType.GetGenericTypeDefinition() == openGenericType)
+						{
+							results.Add(type);
+						}
+					}
+				}
+			}
+
+			return results;
+		}
+
+		[return: NotNull]
 		internal static List<Type> GetImplementingTypes<TInterface>([DisallowNull] Assembly mustReferenceAssembly, bool publicOnly, int estimatedResultCount) where TInterface : class
 		{
 			#if DEV_MODE
@@ -292,6 +351,77 @@ namespace Sisus.Init.Internal
 			}
 
 			return results;
+		}
+
+		/// <summary>
+		/// NOTE: Even if this looks unused, it can be used in builds.
+		/// </summary>
+		[return: NotNull]
+		internal static List<Type> GetAllTypesVisibleTo([AllowNull] Type visibleTo, Func<Type, bool> filter, int estimatedResultCount)
+		{
+			var results = new List<Type>(estimatedResultCount);
+			var assemblyContainingType = visibleTo.Assembly;
+			Func<Type, bool> isNotUnrelatedNestedFamilyType = type => !IsUnrelatedNestedFamilyType(type, visibleTo);
+
+			results.AddRange(assemblyContainingType.GetLoadableTypes(false)
+				.Where(isNotUnrelatedNestedFamilyType)
+				.Where(filter));
+
+			foreach(var visibleAssembly in GetAllAssembliesVisibleToThreadSafe(visibleTo.Assembly))
+			{
+				if(visibleAssembly != assemblyContainingType)
+				{
+					results.AddRange(visibleAssembly.GetLoadableTypes(true).Where(filter));
+				}
+			}
+
+			return results;
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			static bool IsUnrelatedNestedFamilyType(Type type, Type visibleTo)
+			{
+				// Nested private, protected, and private protected classes are only visible to their parent type, and types that share the same parent
+
+				if(type is { IsNested : false } or { IsNestedPublic : true } or { IsNestedAssembly: true })
+				{
+					return false;
+				}
+
+				if(type is { IsNestedFamily : false })
+				{
+					return true;
+				}
+
+				var parentType = type.DeclaringType;
+				return type.DeclaringType == visibleTo || parentType == visibleTo.DeclaringType;
+			}
+		}
+
+		public static IEnumerable<Assembly> GetAllAssembliesVisibleToThreadSafe([AllowNull] Assembly visibleTo)
+		{
+			var referencedAssemblyNames = visibleTo.GetReferencedAssemblies().Select(name => name.Name).ToArray();
+			int referencedAssembliesCount = referencedAssemblyNames.Length;
+			var allAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+			for(int n = allAssemblies.Length - 1; n >= 0; n--)
+			{
+				var assembly = allAssemblies[n];
+
+				// skip dynamic assemblies to prevent NotSupportedException from being thrown when calling GetTypes
+				if(assembly.IsDynamic)
+				{
+					continue;
+				}
+
+				var assemblyName = assembly.GetName().Name;
+				for(int r = referencedAssembliesCount - 1; r >= 0; r--)
+				{
+					if(string.Equals(referencedAssemblyNames[r], assemblyName))
+					{
+						yield return assembly;
+						break;
+					}
+				}
+			}
 		}
 
 		/// <summary>
@@ -501,23 +631,22 @@ namespace Sisus.Init.Internal
 			}
 		}
 
-		public static bool IsNullOrBaseType([AllowNull] Type type) => type is null || IsBaseType(type);
+		public static bool IsNullOrBaseType([AllowNull, NotNullWhen(false), MaybeNullWhen(true)] Type type) => type is null || IsBaseType(type);
 
-		public static bool IsBaseType([DisallowNull] Type type) => type.IsGenericType switch
-		{
-			true when type.IsGenericTypeDefinition => genericBaseTypes.Contains(type),
-			true => genericBaseTypes.Contains(type.GetGenericTypeDefinition()),
-			_ => baseTypes.Contains(type)
-		};
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsBaseType([DisallowNull] Type type) => type.IsGenericType ? IsGenericBaseType(type) : baseTypes.Contains(type);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		// simply using namespace comparison instead of checking if the type is found in genericBaseTypes,
+		// so that base types found inside optional add-on packages will also be detected properly
+		// (e.g. SerializedMonoBehaviour<T...> and SerializedScriptableObject<T...>).
+		public static bool IsGenericBaseType([DisallowNull] Type type) => type.IsGenericType && type.Namespace == typeof(MonoBehaviour<object>).Namespace;
 
 		public static bool DerivesFromGenericBaseType([DisallowNull] Type type)
 		{
 			while((type = type.BaseType) != null)
 			{
-				// simply using namespace comparison instead of checking if the type is found in genericBaseTypes,
-				// so that base types found inside optional add-on packages will also be detected properly
-				// (e.g. SerializedMonoBehaviour<T...> and SerializedScriptableObject<T...>).
-				if(type.IsGenericType && type.Namespace == typeof(MonoBehaviour<object>).Namespace)
+				if(IsGenericBaseType(type))
 				{
 					return true;
 				}
@@ -530,10 +659,7 @@ namespace Sisus.Init.Internal
 		{
 			while((type = type.BaseType) != null)
 			{
-				// simply using namespace comparison instead of checking if the type is found in genericBaseTypes,
-				// so that base types found inside optional add-on packages will also be detected properly
-				// (e.g. SerializedMonoBehaviour<T...> and SerializedScriptableObject<T...>).
-				if(type.IsGenericType && type.Namespace == typeof(MonoBehaviour<object>).Namespace)
+				if(IsGenericBaseType(type))
 				{
 					baseType = type;
 					return true;
@@ -669,7 +795,7 @@ namespace Sisus.Init.Internal
 		}
 		
 		[return: NotNull]
-		private static Type[] GetLoadableTypes([DisallowNull] this Assembly assembly, bool publicOnly)
+		internal static Type[] GetLoadableTypes([DisallowNull] this Assembly assembly, bool publicOnly)
 		{
 			try
 			{
@@ -744,6 +870,38 @@ namespace Sisus.Init.Internal
 				arguments[0] = sourceArray;
 				return (TCollection)constructor.Invoke(arguments);
 			}
+		}
+
+		public static BaseTypeIterator GetBaseTypes([DisallowNull] this Type type) => new(type.BaseType);
+
+		public struct BaseTypeIterator
+		{
+			private Type current;
+			private bool isFirst;
+
+			public BaseTypeIterator GetEnumerator() => this;
+
+			internal BaseTypeIterator([AllowNull] Type type)
+			{
+				current = type;
+				isFirst = true;
+			}
+
+			public bool MoveNext()
+			{
+				if(isFirst)
+				{
+					isFirst = false;
+				}
+				else
+				{
+					current = current.BaseType;
+				}
+
+				return !TypeUtility.IsNullOrBaseType(current);
+			}
+
+			public Type Current => current;
 		}
 	}
 }

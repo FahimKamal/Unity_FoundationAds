@@ -1,16 +1,16 @@
 ﻿using System;
-using Alchemy.Inspector;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace Pancake.LevelSystem
 {
     [EditorIcon("icon_default")]
-    public abstract class LevelComponent : GameComponent, ISerializationCallbackReceiver
+    public abstract class LevelComponent : GameComponent
     {
         [SerializeField] private StringConstant type;
-        [SerializeField, HideInEditMode, ReadOnly] protected int originLevelIndex;
-        [SerializeField, HideInEditMode, ReadOnly] protected int currentLevelIndex;
+        [SerializeField, HideInEditorMode, ReadOnly] protected int originLevelIndex;
+        [SerializeField, HideInEditorMode, ReadOnly] protected int currentLevelIndex;
 
         private static event Action WinEvent;
         private static event Action LoseEvent;
@@ -86,7 +86,7 @@ namespace Pancake.LevelSystem
             SkipEvent = null;
         }
 
-        public void OnBeforeSerialize()
+        protected override void OnBeforeSerialize()
         {
 #if UNITY_EDITOR
             if (!UnityEditor.EditorApplication.isPlaying && !UnityEditor.EditorApplication.isUpdating && !UnityEditor.EditorApplication.isCompiling) return;
@@ -94,6 +94,6 @@ namespace Pancake.LevelSystem
             Clear();
         }
 
-        public void OnAfterDeserialize() { }
+        protected override void OnAfterDeserialize() { }
     }
 }

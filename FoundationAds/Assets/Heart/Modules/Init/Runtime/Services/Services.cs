@@ -2,12 +2,6 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 using UnityEngine.Serialization;
-using System.Runtime.CompilerServices;
-
-#if UNITY_EDITOR
-[assembly: InternalsVisibleTo("InitArgs.Editor")]
-[assembly: InternalsVisibleTo("InitArgs.Search")]
-#endif
 
 namespace Sisus.Init.Internal
 {
@@ -44,7 +38,7 @@ namespace Sisus.Init.Internal
 	/// </description></item>
 	/// <item><term> In All Scenes </term>
 	/// <description>
-	/// All clients beloning to any scene have access to the services in the <see cref="Services"/> component.
+	/// All clients belonging to any scene have access to the services in the <see cref="Services"/> component.
 	/// <para>
 	/// Clients that don't belong to any scene, such as <see cref="UnityEngine.ScriptableObject">ScriptableObjects</see>
 	/// and plain old classes that are not attached to a <see cref="UnityEngine.GameObject"/> via a <see cref="Wrapper{}"/> component,
@@ -131,7 +125,7 @@ namespace Sisus.Init.Internal
 			foreach(var serviceDefinition in providesServices)
 			{
 				var service = serviceDefinition.service;
-				if(service == null)
+				if(!service)
 				{
 					Debug.LogWarning($"{GetType().Name} has a missing service reference.", this);
 					continue;
@@ -172,8 +166,8 @@ namespace Sisus.Init.Internal
 
 		internal virtual bool AreAvailableToClient([DisallowNull] GameObject client)
 		{
-			Debug.Assert(client != null);
-			Debug.Assert(this != null);
+			Debug.Assert(client);
+			Debug.Assert(this);
 
 			switch(toClients)
 			{
@@ -240,7 +234,7 @@ namespace Sisus.Init.Internal
 			{
 				for(int i = 0, count = providesServices.Length; i < count; i++)
 				{
-					if(providesServices[i].service == null)
+					if(!providesServices[i].service)
 					{
 						Debug.LogWarning($"Service #{i} on \"{name}\" is missing.", this);
 					}

@@ -1,5 +1,5 @@
 ﻿using System;
-using Alchemy.Inspector;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -161,7 +161,7 @@ namespace Pancake.SafeArea
             };
         }
 
-        [Button, DisableIf(nameof(Application.isPlaying))]
+        [Button, DisableInEditorMode]
         private void ForceUpdateRect()
         {
             UpdateRect();

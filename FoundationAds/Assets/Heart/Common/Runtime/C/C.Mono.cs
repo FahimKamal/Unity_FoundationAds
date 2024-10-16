@@ -37,6 +37,20 @@ namespace Pancake.Common
 
         #region Position XY
 
+        public static void GetPositionXY(this Transform transform, out Vector2 v2)
+        {
+            var v3 = transform.position;
+            v2.x = v3.x;
+            v2.y = v3.y;
+        }
+
+
+        public static Vector2 GetPositionXY(this Transform transform)
+        {
+            var v3 = transform.position;
+            return new Vector2(v3.x, v3.y);
+        }
+        
         public static void SetPositionXY(this Transform transform, in Vector2 v2) { transform.position = new Vector3(v2.x, v2.y, transform.position.z); }
 
 
@@ -1519,11 +1533,26 @@ namespace Pancake.Common
         /// <param name="gameObject"></param>
         public static void Destroy(this GameObject gameObject)
         {
+            if (!gameObject) return;
+
 #if UNITY_EDITOR
-            Object.DestroyImmediate(gameObject);
-#else
-            Object.Destroy(gameObject);
+            if (!Application.isPlaying)
+            {
+                Object.DestroyImmediate(gameObject);
+                return;
+            }
 #endif
+            Object.Destroy(gameObject);
+        }
+
+        /// <summary>
+        /// Safe destroy your self
+        /// </summary>
+        /// <param name="gameObject"></param>
+        public static void SafeDestroy(ref GameObject gameObject)
+        {
+            gameObject.Destroy();
+            gameObject = null;
         }
 
         /// <summary>
@@ -1753,6 +1782,30 @@ namespace Pancake.Common
             }
 
             scroll.normalizedPosition = new Vector2(1 - (scroll.content.rect.width / 2 - target.localPosition.x) / scroll.content.rect.width, 0);
+        }
+
+        /// <summary>
+        /// m_MyGameObject is not truly null, but rather a sort of “null simulator” <br/>
+        /// Then you can call: <br/>gameObject.OrNull()?.DoSomething();
+        /// </summary>
+        /// <param name="source"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static T OrNull<T>(this T source) where T : Object { return source == null ? null : source; }
+        
+        /// <summary>
+        /// Check if the transform is within a certain distance and optionally within a certain angle (FOV) from the target transform.
+        /// </summary>
+        /// <param name="source">The transform to check.</param>
+        /// <param name="target">The target transform to compare the distance and optional angle with.</param>
+        /// <param name="maxDistance">The maximum distance allowed between the two transforms.</param>
+        /// <param name="maxAngle">The maximum allowed angle between the transform's forward vector and the direction to the target (default is 360).</param>
+        /// <returns>True if the transform is within range and angle (if provided) of the target, false otherwise.</returns>
+        public static bool InRangeOf(this Transform source, Transform target, float maxDistance, float maxAngle = 360f)
+        {
+            var directionToTarget = target.position - source.position;
+            directionToTarget.y = 0;
+            return directionToTarget.magnitude <= maxDistance && Vector3.Angle(source.forward, directionToTarget) <= maxAngle / 2;
         }
     }
 }

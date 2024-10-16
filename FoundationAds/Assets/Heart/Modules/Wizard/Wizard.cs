@@ -3,7 +3,6 @@ using System.Linq;
 using Pancake;
 using Pancake.Common;
 using PancakeEditor.Common;
-//using PancakeEditor.Sound;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -120,7 +119,7 @@ namespace PancakeEditor
 
         #endregion
 
-        private readonly Color[] _colors = {Uniform.RaisinBlack, Uniform.GothicOlive, Uniform.Maroon, Uniform.ElegantNavy, Uniform.CrystalPurple};
+        private readonly Color[] _colors = {Uniform.Zinc_600, Uniform.Zinc_600, Uniform.Zinc_600, Uniform.Zinc_600};
         public const float TAB_WIDTH = 50f;
 
         [SerializeField] private int tabIndex = -1;
@@ -293,6 +292,7 @@ namespace PancakeEditor
                                 });
                         break;
                     case WizardAllType.InAppPurchase:
+#if PANCAKE_IAP
                         var iapSettings = ProjectDatabase.FindAll<Pancake.IAP.IAPSettings>();
                         if (!iapSettings.IsNullOrEmpty())
                             ShowContextMenu(iapSettings[0],
@@ -307,6 +307,8 @@ namespace PancakeEditor
                                         RegistryManager.Resolve();
                                     }
                                 });
+#endif
+
                         break;
                     case WizardAllType.HeartSetting:
                         var heartSetting = Resources.Load<HeartSettings>(nameof(HeartSettings));

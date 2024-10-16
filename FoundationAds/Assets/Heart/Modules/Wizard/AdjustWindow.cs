@@ -13,14 +13,14 @@ namespace PancakeEditor
         public static void OnInspectorGUI()
         {
 #if PANCAKE_ADJUST
-            Uniform.DrawInstalled("4.38.0");
+            Uniform.DrawInstalled("5.0.3");
             EditorGUILayout.Space();
 
             var adjustSetting = Resources.Load<AdjustConfig>(nameof(AdjustConfig));
             if (adjustSetting == null)
             {
                 GUI.enabled = !EditorApplication.isCompiling;
-                GUI.backgroundColor = Uniform.Pink;
+                GUI.backgroundColor = Uniform.Pink_500;
                 if (GUILayout.Button("Create Adjust Setting", GUILayout.MaxHeight(Wizard.BUTTON_HEIGHT)))
                 {
                     var setting = ScriptableObject.CreateInstance<AdjustConfig>();
@@ -28,7 +28,7 @@ namespace PancakeEditor
                     AssetDatabase.CreateAsset(setting, $"{Editor.DEFAULT_RESOURCE_PATH}/{nameof(AdjustConfig)}.asset");
                     AssetDatabase.SaveAssets();
                     AssetDatabase.Refresh();
-                    Debug.Log($"{nameof(AdjustConfig).TextColor("#f75369")} was created ad {Editor.DEFAULT_RESOURCE_PATH}/{nameof(AdjustConfig)}.asset");
+                    Debug.Log($"{nameof(AdjustConfig).SetColor("#f75369")} was created ad {Editor.DEFAULT_RESOURCE_PATH}/{nameof(AdjustConfig)}.asset");
                 }
 
                 GUI.backgroundColor = Color.white;
@@ -39,11 +39,27 @@ namespace PancakeEditor
                 var editor = UnityEditor.Editor.CreateEditor(adjustSetting);
                 editor.OnInspectorGUI();
             }
+
+            GUILayout.FlexibleSpace();
+
+            var previousColor = GUI.backgroundColor;
+            GUI.backgroundColor = Uniform.Red_500;
+            if (GUILayout.Button("Uninstall", GUILayout.MaxHeight(Wizard.BUTTON_HEIGHT)))
+            {
+                bool confirmDelete = EditorUtility.DisplayDialog("Uninstall Adjust", "Are you sure you want to uninstall adjust package ?", "Yes", "No");
+                if (confirmDelete)
+                {
+                    RegistryManager.Remove("com.adjust.sdk");
+                    RegistryManager.Resolve();
+                }
+            }
+
+            GUI.backgroundColor = previousColor;
 #else
             GUI.enabled = !EditorApplication.isCompiling;
             if (GUILayout.Button("Install Adjust Package", GUILayout.MaxHeight(Wizard.BUTTON_HEIGHT)))
             {
-                RegistryManager.Add("com.pancake.adjust", "https://github.com/pancake-llc/adjust.git#4.38.0");
+                RegistryManager.Add("com.adjust.sdk", "https://github.com/adjust/unity_sdk.git?path=Assets/Adjust#v5.0.3");
                 RegistryManager.Resolve();
             }
 

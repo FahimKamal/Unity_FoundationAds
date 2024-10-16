@@ -23,7 +23,8 @@ namespace PancakeEditor
                 return;
             }
 
-            bool isInCollection = fieldInfo.FieldType.IsCollectionType();
+            var isInCollection = true;
+            if (fieldInfo != null) isInCollection = fieldInfo.FieldType.IsCollectionType();
             DrawIfNotNull(position,
                 property,
                 label,
@@ -35,7 +36,7 @@ namespace PancakeEditor
 
         private void DrawIfNull(Rect position, SerializedProperty property, GUIContent label)
         {
-            if (fieldInfo.FieldType.IsAbstract)
+            if (fieldInfo != null && fieldInfo.FieldType.IsAbstract)
             {
                 EditorGUI.PropertyField(position, property, label);
                 return;
@@ -47,11 +48,12 @@ namespace PancakeEditor
 
             if (GUI.Button(rect, guiContent))
             {
-                string newName = GetFieldName().ToSnakeCase();
-                var typeCreate = fieldInfo.FieldType;
+                string newName = GetFieldName(property).ToSnakeCase();
+                var typeCreate = fieldInfo != null ? fieldInfo.FieldType : GetTypeFromSerializedProperty(property);
 
-                var elementType = fieldInfo.FieldType.GetCorrectElementType();
+                var elementType = typeCreate.GetCorrectElementType();
                 if (elementType != null) typeCreate = elementType;
+
 #pragma warning disable CS0612
                 property.objectReferenceValue = EditorCreator.CreateScriptableAt(typeCreate,
                     newName,
@@ -92,7 +94,7 @@ namespace PancakeEditor
                     rect.width = position.width;
                     EditorGUI.PropertyField(rect, property, label);
                     var cacheBgColor = GUI.backgroundColor;
-                    GUI.backgroundColor = EditorGUIUtility.isProSkin ? Uniform.BabyBlueEyes : Uniform.ChinesePink;
+                    GUI.backgroundColor = EditorGUIUtility.isProSkin ? Uniform.Sky_300 : Uniform.Pink_300;
                     GUILayout.BeginVertical(GUI.skin.box);
                     if (_editor == null) Editor.CreateCachedEditor(targetObject, null, ref _editor);
                     _editor.OnInspectorGUI();
@@ -109,7 +111,16 @@ namespace PancakeEditor
             else DrawUnExpanded(position, property, label, targetObject);
         }
 
-        protected virtual string GetFieldName() { return fieldInfo.Name; }
+        protected virtual string GetFieldName(SerializedProperty property)
+        {
+            if (fieldInfo == null)
+            {
+                string[] pathParts = property.propertyPath.Split('.');
+                return pathParts[^1];
+            }
+
+            return fieldInfo.Name;
+        }
 
         protected virtual void DrawUnExpanded(Rect position, SerializedProperty property, GUIContent label, Object targetObject)
         {
@@ -148,6 +159,38 @@ namespace PancakeEditor
 
             inner.ApplyModifiedProperties();
             EditorGUI.EndProperty();
+        }
+
+        private System.Type GetTypeFromSerializedProperty(SerializedProperty property)
+        {
+            if (property.propertyType == SerializedPropertyType.ObjectReference)
+            {
+                var obj = property.objectReferenceValue;
+                if (obj != null) return obj.GetType();
+            }
+
+            var t = property.serializedObject.targetObject.GetType();
+#if ODIN_INSPECTOR
+            const string emittedKeyPrefix = "Sirenix.OdinInspector.EmittedUnityProperties.EmittedSOProperty_Key_";
+            const string emittedValuePrefix = "Sirenix.OdinInspector.EmittedUnityProperties.EmittedSOProperty_Value_";
+            if (t.FullName != null)
+            {
+                if (t.FullName.StartsWith(emittedKeyPrefix))
+                {
+                    string typePart = t.FullName[emittedKeyPrefix.Length..];
+                    TypeExtensions.FindTypeByFullName(typePart, out var type);
+                    t = type;
+                }
+                else if (t.FullName.StartsWith(emittedValuePrefix))
+                {
+                    string typePart = t.FullName[emittedValuePrefix.Length..];
+                    TypeExtensions.FindTypeByFullName(typePart, out var type);
+                    t = type;
+                }
+            }
+#endif
+
+            return t;
         }
     }
 }

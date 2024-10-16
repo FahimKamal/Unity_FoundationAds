@@ -18,7 +18,7 @@ namespace PancakeEditor
             if (iapSettings == null)
             {
                 GUI.enabled = !EditorApplication.isCompiling;
-                GUI.backgroundColor = Uniform.Pink;
+                GUI.backgroundColor = Uniform.Pink_500;
                 if (GUILayout.Button("Create IAP Setting", GUILayout.MaxHeight(Wizard.BUTTON_HEIGHT)))
                 {
                     var setting = ScriptableObject.CreateInstance<IAPSettings>();
@@ -41,7 +41,7 @@ namespace PancakeEditor
             GUI.enabled = !EditorApplication.isCompiling;
             if (GUILayout.Button("Install Unity Purchasing", GUILayout.MaxHeight(Wizard.BUTTON_HEIGHT)))
             {
-                RegistryManager.Add("com.unity.purchasing", "4.12.0");
+                RegistryManager.Add("com.unity.purchasing", "4.12.2");
                 RegistryManager.Resolve();
             }
 

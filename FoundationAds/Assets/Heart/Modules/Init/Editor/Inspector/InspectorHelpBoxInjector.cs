@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Sisus.Init.Internal;
+using Sisus.Shared.EditorOnly;
 using UnityEditor;
 using UnityEngine;
 
@@ -36,7 +38,7 @@ namespace Sisus.Init.EditorOnly.Internal
 				foreach(var serviceDefinition in servicesComponent.providesServices)
 				{
 					var service = serviceDefinition.service;
-					if(service == null)
+					if(!service)
 					{
 						continue;
 					}
@@ -47,9 +49,9 @@ namespace Sisus.Init.EditorOnly.Internal
 						continue;
 					}
 
-					Type definingType = serviceDefinition.definingType ?? service.GetType();
-					GlobalServiceInfo serviceAttributeInfo;
-					if(TryGetServiceAttributeInfo(definingType, out serviceAttributeInfo))
+					Type definingType = serviceDefinition.definingType;
+					definingType ??= service.GetType();
+					if(TryGetServiceAttributeInfo(definingType, out _))
 					{
 						content.text = GetReplacesDefaultServiceText(definingType, servicesComponent.toClients);
 						height += DrawHelpBox(MessageType.Info, content);
@@ -66,7 +68,7 @@ namespace Sisus.Init.EditorOnly.Internal
 				foreach(var serviceTag in ServiceTagUtility.GetServiceTags(component))
 				{
 					if(serviceTag.DefiningType is Type definingType
-					&& TryGetServiceAttributeInfo(definingType, out var serviceAttributeInfo))
+					&& TryGetServiceAttributeInfo(definingType, out _))
 					{
 						content.text = GetReplacesDefaultServiceText(definingType, serviceTag.ToClients);
 						height += DrawHelpBox(MessageType.Info, content);
@@ -77,7 +79,7 @@ namespace Sisus.Init.EditorOnly.Internal
 			return height;
 		}
 
-		static bool TryGetServiceAttributeInfo(Type definingType, out GlobalServiceInfo serviceAttributeInfo)
+		static bool TryGetServiceAttributeInfo([DisallowNull] Type definingType, out GlobalServiceInfo serviceAttributeInfo)
 			=> ServiceAttributeUtility.definingTypes.TryGetValue(definingType, out serviceAttributeInfo);
 		
 		static bool TryGetServiceTag(Component component, Type matchingDefiningType, out ServiceTag result)

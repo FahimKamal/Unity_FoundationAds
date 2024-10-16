@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace PancakeEditor.Finder
 {
-    public static class MyGUIContent
+    internal static class MyGUIContent
     {
         // Cache to improve performance
         private static readonly Dictionary<string, GUIContent> StringMap = new();
@@ -23,6 +23,12 @@ namespace PancakeEditor.Finder
 
         public static GUIContent FromString(string title, string tooltip = null)
         {
+            if (string.IsNullOrEmpty(title))
+            {
+                Debug.LogWarning("Title is null or empty!");
+                return GUIContent.none;
+            }
+
             if (StringMap.TryGetValue(title, out var result)) return result;
             result = new GUIContent(title, tooltip);
             StringMap.Add(title, result);

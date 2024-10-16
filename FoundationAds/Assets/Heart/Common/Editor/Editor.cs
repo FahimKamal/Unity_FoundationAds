@@ -52,15 +52,15 @@ namespace PancakeEditor.Common
         private static void DrawSprite(Sprite sprite, Vector3 worldSpace, Vector3 size)
         {
             if (sprite == null) return;
-            Rect spriteTextureRect = LocalTextureRect(sprite);
+            var spriteTextureRect = LocalTextureRect(sprite);
 
             Handles.BeginGUI();
 
-            Vector2 v0 = HandleUtility.WorldToGUIPoint(worldSpace - size / 2f);
-            Vector2 v1 = HandleUtility.WorldToGUIPoint(worldSpace + size / 2f);
-            Vector2 vMin = new Vector2(Mathf.Min(v0.x, v1.x), Mathf.Min(v0.y, v1.y));
-            Vector2 vMax = new Vector2(Mathf.Max(v0.x, v1.x), Mathf.Max(v0.y, v1.y));
-            Rect r = new Rect(vMin, vMax - vMin);
+            var v0 = HandleUtility.WorldToGUIPoint(worldSpace - size / 2f);
+            var v1 = HandleUtility.WorldToGUIPoint(worldSpace + size / 2f);
+            var vMin = new Vector2(Mathf.Min(v0.x, v1.x), Mathf.Min(v0.y, v1.y));
+            var vMax = new Vector2(Mathf.Max(v0.x, v1.x), Mathf.Max(v0.y, v1.y));
+            var r = new Rect(vMin, vMax - vMin);
             GUI.DrawTextureWithTexCoords(r, sprite.texture, spriteTextureRect);
 
             Handles.EndGUI();
@@ -439,59 +439,6 @@ namespace PancakeEditor.Common
         /// <returns></returns>
         public static string ToSnakeCase(this string source) { return new SnakeCaseNamingStrategy().GetPropertyName(source, false); }
 
-        public static bool IsSerializable(Type type)
-        {
-            if (type == null) return false;
-
-            if (typeof(Object).IsAssignableFrom(type)) return true;
-
-            if (type.IsArray)
-            {
-                //dont support multi-dimensional arrays
-                if (type.GetArrayRank() != 1) return false;
-
-                type = type.GetElementType();
-                if (typeof(Object).IsAssignableFrom(type)) return true;
-            }
-            else if (type.IsGenericType)
-            {
-                // Generic types are allowed on 2020.1 and later
-#if UNITY_2020_1_OR_NEWER
-                if (type.GetGenericTypeDefinition() == typeof(List<>))
-                {
-                    type = type.GetGenericArguments()[0];
-
-                    if (typeof(Object).IsAssignableFrom(type)) return true;
-                }
-
-#else
-                if (type.GetGenericTypeDefinition() != typeof(List<>)) return false;
-
-                type = type.GetGenericArguments()[0];
-                if (typeof(UnityEngine.Object).IsAssignableFrom(type)) return true;
-#endif
-            }
-
-#if !UNITY_2020_1_OR_NEWER
-            if (type.IsGenericType) return false;
-#endif
-
-            return Attribute.IsDefined(type, typeof(SerializableAttribute), false);
-        }
-
-        public static void DrawSerializationError(Type type, Rect position = default)
-        {
-            if (position == default)
-            {
-                EditorGUILayout.HelpBox($"{type} is not marked as Serializable," + "\n Add [System.Serializable] attribute.", MessageType.Error);
-            }
-            else
-            {
-                var icon = EditorGUIUtility.IconContent("Error").image;
-                GUI.DrawTexture(position, icon, ScaleMode.ScaleToFit);
-            }
-        }
-
         /// <summary>
         /// check if given type is array or list
         /// </summary>
@@ -513,118 +460,6 @@ namespace PancakeEditor.Common
 
             return null;
         }
-
-        private static readonly Dictionary<string, string> BuiltInTypes = new Dictionary<string, string>
-        {
-            {"byte", "System.Byte"},
-            {"sbyte", "System.SByte"},
-            {"char", "System.Char"},
-            {"decimal", "System.Decimal"}, //not serializable by unity [DO NOT USE]. Use float or double instead.
-            {"double", "System.Double"},
-            {"uint", "System.UInt32"},
-            {"nint", "System.IntPtr"},
-            {"nuint", "System.UIntPtr"},
-            {"long", "System.Int64"},
-            {"ulong", "System.UInt64"},
-            {"short", "System.Int16"},
-            {"ushort", "System.UInt16"},
-            {"int", "System.Int32"},
-            {"float", "System.Single"},
-            {"string", "System.String"},
-            {"object", "System.Object"},
-            {"bool", "System.Boolean"}
-        };
-
-        private static readonly HashSet<Type> UnityTypes = new()
-        {
-            typeof(string),
-            typeof(Vector4),
-            typeof(Vector3),
-            typeof(Vector2),
-            typeof(Rect),
-            typeof(Quaternion),
-            typeof(Color),
-            typeof(Color32),
-            typeof(LayerMask),
-            typeof(Bounds),
-            typeof(Matrix4x4),
-            typeof(AnimationCurve),
-            typeof(Gradient),
-            typeof(RectOffset),
-            typeof(bool[]),
-            typeof(byte[]),
-            typeof(sbyte[]),
-            typeof(char[]),
-            typeof(double[]),
-            typeof(float[]),
-            typeof(int[]),
-            typeof(uint[]),
-            typeof(long[]),
-            typeof(ulong[]),
-            typeof(short[]),
-            typeof(ushort[]),
-            typeof(string[]),
-            typeof(Vector4[]),
-            typeof(Vector3[]),
-            typeof(Vector2[]),
-            typeof(Rect[]),
-            typeof(Quaternion[]),
-            typeof(Color[]),
-            typeof(Color32[]),
-            typeof(LayerMask[]),
-            typeof(Bounds[]),
-            typeof(Matrix4x4[]),
-            typeof(AnimationCurve[]),
-            typeof(Gradient[]),
-            typeof(RectOffset[]),
-            typeof(List<bool>),
-            typeof(List<byte>),
-            typeof(List<sbyte>),
-            typeof(List<char>),
-            typeof(List<double>),
-            typeof(List<float>),
-            typeof(List<int>),
-            typeof(List<uint>),
-            typeof(List<long>),
-            typeof(List<ulong>),
-            typeof(List<short>),
-            typeof(List<ushort>),
-            typeof(List<string>),
-            typeof(List<Vector4>),
-            typeof(List<Vector3>),
-            typeof(List<Vector2>),
-            typeof(List<Rect>),
-            typeof(List<Quaternion>),
-            typeof(List<Color>),
-            typeof(List<Color32>),
-            typeof(List<LayerMask>),
-            typeof(List<Bounds>),
-            typeof(List<Matrix4x4>),
-            typeof(List<AnimationCurve>),
-            typeof(List<Gradient>),
-            typeof(List<RectOffset>),
-            typeof(Vector3Int),
-            typeof(Vector2Int),
-            typeof(RectInt),
-            typeof(BoundsInt),
-            typeof(Vector3Int[]),
-            typeof(Vector2Int[]),
-            typeof(RectInt[]),
-            typeof(BoundsInt[]),
-            typeof(List<Vector3Int>),
-            typeof(List<Vector2Int>),
-            typeof(List<RectInt>),
-            typeof(List<BoundsInt>)
-        };
-
-        public static bool IsBuiltInType(string typeName)
-        {
-            if (BuiltInTypes.TryGetValue(typeName, out var qualifiedName)) typeName = qualifiedName;
-            var type = Type.GetType(typeName);
-            return type?.Namespace != null && type.Namespace.StartsWith("System");
-        }
-
-        public static bool IsUnityType(Type type) => UnityTypes.Contains(type);
 
         /// <summary>
         /// Convert image from string base 64
@@ -761,16 +596,11 @@ namespace PancakeEditor.Common
             }
         }
 
-        /// <summary>
-        /// get inspector type to display window
-        /// </summary>
-        public static Type InspectorWindow => typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.InspectorWindow");
-
         public static string GetSizeInMemory(this long byteSize)
         {
             string[] sizes = {"B", "KB", "MB", "GB", "TB"};
-            double len = Convert.ToDouble(byteSize);
-            int order = 0;
+            var len = Convert.ToDouble(byteSize);
+            var order = 0;
             while (len >= 1024D && order < sizes.Length - 1)
             {
                 order++;
@@ -782,8 +612,8 @@ namespace PancakeEditor.Common
 
         public static void MoveToCenter(this EditorWindow window)
         {
-            Rect position = window.position;
-            Rect mainWindowPosition = ScreenUtility.GetCenter();
+            var position = window.position;
+            var mainWindowPosition = ScreenUtility.GetCenter();
             if (mainWindowPosition != Rect.zero)
             {
                 float width = (mainWindowPosition.width - position.width) * 0.5f;
@@ -819,5 +649,116 @@ namespace PancakeEditor.Common
 
             return false;
         }
+
+        public static void RecordUndo(this Object o, string operationName = "") => Undo.RecordObject(o, operationName);
+
+        public static void Dirty(this Object o) => EditorUtility.SetDirty(o);
+
+        #region Rect
+
+        private static WrappedEvent Wrap(this Event e) => new(e);
+
+        public static WrappedEvent CurrentEvent =>
+            (Event.current ?? typeof(Event).GetField("s_Current", TypeExtensions.MAX_BINDING_FLAGS)?.GetValue(null) as Event).Wrap();
+
+        public static Rect SetPosition(this Rect rect, Vector2 v) => rect.SetPosition(v.x, v.y);
+
+        public static Rect SetPosition(this Rect rect, float x, float y)
+        {
+            rect.x = x;
+            rect.y = y;
+            return rect;
+        }
+
+        public static Rect SetXMax(this Rect rect, float value)
+        {
+            rect.xMax = value;
+            return rect;
+        }
+
+        public static Rect AddX(this Rect rect, float value)
+        {
+            rect.x += value;
+            return rect;
+        }
+
+        public static Rect AddY(this Rect rect, float value)
+        {
+            rect.y += value;
+            return rect;
+        }
+        
+        public static Rect AddXMax(this Rect rect, float value)
+        {
+            rect.xMax += value;
+            return rect;
+        }
+
+        public static Rect AddYMax(this Rect rect, float value)
+        {
+            rect.yMax += value;
+            return rect;
+        }
+
+        public static Rect SetWidth(this Rect rect, float value)
+        {
+            rect.width = value;
+            return rect;
+        }
+
+        public static Rect SetWidthFromMid(this Rect rect, float px)
+        {
+            rect.x += rect.width / 2;
+            rect.width = px;
+            rect.x -= rect.width / 2;
+            return rect;
+        }
+
+        public static Rect SetWidthFromRight(this Rect rect, float px)
+        {
+            rect.x += rect.width;
+            rect.width = px;
+            rect.x -= rect.width;
+            return rect;
+        }
+
+        public static Rect SetHeight(this Rect rect, float f)
+        {
+            rect.height = f;
+            return rect;
+        }
+
+        public static Rect SetHeightFromBottom(this Rect rect, float px)
+        {
+            rect.y += rect.height;
+            rect.height = px;
+            rect.y -= rect.height;
+            return rect;
+        }
+
+        public static Rect AddWidth(this Rect rect, float f) => rect.SetWidth(rect.width + f);
+
+        public static Rect AddWidthFromMid(this Rect rect, float f) => rect.SetWidthFromMid(rect.width + f);
+
+        public static Rect AddWidthFromRight(this Rect rect, float f) => rect.SetWidthFromRight(rect.width + f);
+
+        public static Rect AddHeight(this Rect rect, float f) => rect.SetHeight(rect.height + f);
+
+        public static Rect AddHeightFromBottom(this Rect rect, float f) => rect.SetHeightFromBottom(rect.height + f);
+
+        public static bool IsHovered(this Rect r) => !CurrentEvent.IsNull && r.Contains(CurrentEvent.MousePosition);
+
+        public static void MarkInteractive(this Rect rect)
+        {
+            if (!CurrentEvent.IsRepaint) return;
+
+            var unclippedRect = (Rect) TypeExtensions.GUIClipUnclipToWindow.Invoke(null, new object[] {rect});
+
+            object curGuiView = TypeExtensions.CurrentGuiView.GetValue(null);
+
+            TypeExtensions.GUIViewMarkHotRegion.Invoke(curGuiView, new object[] {unclippedRect});
+        }
+
+        #endregion
     }
 }

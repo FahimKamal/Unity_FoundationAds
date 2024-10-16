@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Sisus.Init.Internal;
+using Sisus.Shared.EditorOnly;
 using UnityEditor;
 using UnityEngine;
 
@@ -187,7 +188,7 @@ namespace Sisus.Init.EditorOnly.Internal
 
 			var labelRect = headerRect;
 			labelRect.x = headerRect.width - 69f - labelWidth;
-			labelRect. x -= 16 * 6 + 3 * 5; // for 6 button in header component
+			labelRect. x -= 16 * 4 + 3 * 3; // for 4 button in header component
 			labelRect.y += 4f;
 
 			// Fixes Transform header label rect position.

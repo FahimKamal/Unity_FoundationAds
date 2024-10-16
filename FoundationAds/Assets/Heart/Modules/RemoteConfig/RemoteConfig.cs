@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using Alchemy.Serialization;
-using Pancake.Monetization;
+using Sirenix.OdinInspector;
 #if PANCAKE_REMOTE_CONFIG
+using System.Threading.Tasks;
+using Pancake.Monetization;
 using Firebase;
 using Firebase.Extensions;
 using Firebase.RemoteConfig;
@@ -12,13 +12,16 @@ using UnityEngine;
 
 namespace Pancake.Tracking
 {
-    [AlchemySerialize]
-    public partial class RemoteConfig : MonoBehaviour
+    public class RemoteConfig : SerializedMonoBehaviour
     {
-        [AlchemySerializeField, NonSerialized] private Dictionary<StringConstant, string> remoteData = new();
-        [SerializeField] private StringConstant currentAdNetwork;
+#pragma warning disable CS0067 // Event is never used
+        private static event Func<StringConstant, string> GetRemoteConfigValueEvent;
+#pragma warning restore CS0067 // Event is never used
 
-        public static bool IsFetchCompleted { get; set; }
+        [SerializeField] private Dictionary<StringConstant, string> remoteData = new();
+        [SerializeField] private StringConstant remoteAdNetworkKey;
+
+        public bool IsFetchCompleted { get; private set; }
 
 #if PANCAKE_REMOTE_CONFIG
         private void Start()
@@ -30,7 +33,7 @@ namespace Pancake.Tracking
                     var status = task.Result;
                     if (status == DependencyStatus.Available)
                     {
-                        var app = FirebaseApp.DefaultInstance;
+                        _ = FirebaseApp.DefaultInstance;
                         FetchAsync();
                     }
                 });
@@ -47,7 +50,7 @@ namespace Pancake.Tracking
         /// <returns></returns>
         private Task FetchAsync()
         {
-            var task = FirebaseRemoteConfig.DefaultInstance.FetchAsync(TimeSpan.Zero);
+            var task = FirebaseRemoteConfig.DefaultInstance.FetchAsync(System.TimeSpan.Zero);
             return task.ContinueWithOnMainThread(FetchComplete);
         }
 
@@ -76,22 +79,23 @@ namespace Pancake.Tracking
                         if (!string.IsNullOrEmpty(key.Value))
                         {
                             ConfigValue configValue = FirebaseRemoteConfig.DefaultInstance.GetValue(key.Value);
-                            if (configValue.Source == ValueSource.RemoteValue)
-                            {
-                                remoteData[key] = configValue.StringValue;
-                            }
+                            if (configValue.Source == ValueSource.RemoteValue) remoteData[key] = configValue.StringValue;
                         }
                     }
 
-                    if (currentAdNetwork != null && currentAdNetwork.Value != string.Empty)
-                    {
-                        Advertising.ChangeNetwork(remoteData[currentAdNetwork]);
-                    }
+                    if (remoteAdNetworkKey != null && remoteAdNetworkKey.Value != string.Empty) Advertising.ChangeNetwork(remoteData[remoteAdNetworkKey]);
 
                     IsFetchCompleted = true;
+
+                    GetRemoteConfigValueEvent += OnGetRemoteConfigValue;
                 });
         }
 
+        private void OnDestroy() { GetRemoteConfigValueEvent -= OnGetRemoteConfigValue; }
+
+        private string OnGetRemoteConfigValue(StringConstant arg) => remoteData[arg];
+
+        public static string TakeValue(StringConstant arg) => GetRemoteConfigValueEvent?.Invoke(arg);
 #endif
     }
 }
